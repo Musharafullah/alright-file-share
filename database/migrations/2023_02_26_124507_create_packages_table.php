@@ -15,6 +15,11 @@ return new class extends Migration
     {
         Schema::create('packages', function (Blueprint $table) {
             $table->UUID('id')->primary();
+            $table->string("name")->nullable();
+            $table->string("quota")->nullable();
+            $table->string("price")->nullable();
+            $table->string("duration")->nullable();
+            $table->string("status")->default(0)->comment('1 or showing:and 0 for soft delete hide');
             $table->timestamps();
         });
     }

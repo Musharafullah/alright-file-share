@@ -10,6 +10,14 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    // get all users
+    public function getall()
+    {
+
+        $user = User::all();
+        return response()
+            ->json(['data' => $user,'access_token']);
+    }
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(),[
@@ -102,4 +110,5 @@ class AuthController extends Controller
             'message' => 'You have successfully logged out and the token was successfully deleted'
         ];
     }
+
 }

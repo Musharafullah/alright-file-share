@@ -4,7 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use App\Models\Package;
+use Validator;
 class PackageController extends Controller
 {
     private $_request = null;
@@ -15,7 +16,7 @@ class PackageController extends Controller
      *
      * @return $reauest, $modal
      */
-    public function __construct(Request $request, {{ model }} $modal)
+    public function __construct(Request $request, Package $modal)
     {
         $this->_request = $request;
         $this->_modal = $modal;
@@ -28,37 +29,38 @@ class PackageController extends Controller
      */
     public function index()
     {
-        $all = $this->get_all($this->_modal);
 
-        return view({{ routeName }}, compact('all'));
+        $allpackages = $this->get_all($this->_modal);
+        if($allpackages)
+        {
+            $message = "Records found!";
+        }else{
+            $message = "Records not found!";
+        }
+        return response()->json(['data' => $allpackages,'message' => $message]);
+
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        // return view({{ view_name }});
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    //store packages
     public function store()
     {
-        $this->validate($this->_request, [
+
+        $validator = Validator::make($this->_request->all(),[
             'name' => 'required',
+            'quota' => 'required',
+            'price' => 'required',
+            'duration' => 'required',
         ]);
 
+        if($validator->fails()){
+            return response()->json($validator->errors());
+        }
+
         $data = $this->_request->except('_token');
+        $data = $this->_request->only('name','quota','duration','price');
         $var = $this->add($this->_modal, $data);
 
-        return redirect()->route('{{routeName}}');
+        return response()->json(['data' => $var,'message' => "package inserted successfully!"]);
     }
 
     /**
@@ -69,46 +71,55 @@ class PackageController extends Controller
      */
     public function show($id)
     {
+
         $data = $this->get_by_id($this->_modal, $id);
-        return view('{{view_name}}', compact('data'));
+
+        if($data)
+        {
+            $message = "Records found!";
+        }else{
+            $message = "Records not found!";
+        }
+        return response()->json(['data' => $data,'message' => $message]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  $this->_modal  $modal
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $data = $this->get_by_id($this->_modal, $id);
-        return view('{{view_name}}', compact('data'));
-    }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  {{ model }}  $modal
-     * @return \Illuminate\Http\Response
+     * for update package
      */
     public function update($id)
     {
-        $this->validate($this->_request, [
+
+        $validator = Validator::make($this->_request->all(),[
             'name' => 'required',
+            'quota' => 'required',
+            'price' => 'required',
+            'duration' => 'required',
         ]);
 
-        $data = $this->_request->except('_token', '_method');
+        if($validator->fails()){
+            return response()->json($validator->errors());
+        }
+        $check= $this->get_by_id($this->_modal, $id);
 
-        $data = $this->get_by_id($this->_modal, $id)->update($data);
+        if($check)
+        {
+            $data = $this->_request->only('name','quota','duration','price');
+            $check->update($data);
+            $message = "package updated successfully!";
+            return response()->json(['data' => $check,'message' => $message]);
+        }else{
+            $message = "Records not found!";
+            return response()->json(['message' => $message]);
+        }
 
-        return redirect()->route('{{routeName}}.index');
+
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  {{ model }}  $modal
+     * @param  Package  $modal
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
